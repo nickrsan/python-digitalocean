@@ -6,7 +6,7 @@ from .Image import Image
 from .Kernel import Kernel
 from .baseapi import BaseAPI, Error, GET, POST, DELETE
 from .SSHKey import SSHKey
-
+from .Backup import Backup
 
 class DropletError(Error):
     """Base exception class for this module"""
@@ -77,6 +77,7 @@ class Droplet(BaseAPI):
         self.networks = []
         self.kernel = None
         self.backup_ids = []
+        self.backup_images = None  # set to [] if backups is True
         self.snapshot_ids = []
         self.action_ids = []
         self.features = []
@@ -138,6 +139,15 @@ class Droplet(BaseAPI):
                 self.ip_address = net['ip_address']
         if self.networks['v6']:
             self.ip_v6_address = self.networks['v6'][0]['ip_address']
+
+        if "backups" in self.features:  # check for backups
+            self.backups = True
+            self.backup_images = []
+            for backup_id in self.backup_ids:
+                self.backup_images.append(Backup(id=backup_id, droplet=self))
+        else:
+            self.backups = False
+
         return self
 
     def _perform_action(self, params, return_dict=True):
